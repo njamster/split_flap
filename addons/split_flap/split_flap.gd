@@ -1,6 +1,11 @@
 @tool
-# TODO: @icon
+@icon("split_flap.svg")
 class_name SplitFlap extends Control
+
+#region SIGNALS
+signal flipped
+signal finished
+#endregion
 
 #region ENUMS
 enum Presets {
@@ -35,7 +40,6 @@ const ALPHABETIC_SEQUENCE : Array[String] = [
 			Presets.CUSTOM:
 				flap_sequence = []
 
-# TODO: randomized sequence option?
 @export var flap_sequence : Array[String]:
 	set(value):
 		for element in value:
@@ -47,10 +51,9 @@ const ALPHABETIC_SEQUENCE : Array[String] = [
 			for child in get_children():
 				_apply_text(child)
 
-# TODO: randomized starting point?
 @export_range(-1, 10, 1) var current_char_id := -1:
 	set(value):
-		current_char_id = value
+		current_char_id = wrapi(value, 0, flap_sequence.size() - 1)
 		if is_inside_tree():
 			for child in get_children():
 				_apply_text(child)
@@ -75,10 +78,16 @@ const ALPHABETIC_SEQUENCE : Array[String] = [
 			for child in get_children():
 				_apply_font_settings.call_deferred(child)
 
-# TODO: separate styleboxes for upper and lower segment
-@export var segment_stylebox : StyleBox:
+@export var upper_segment : StyleBox:
 	set(value):
-		segment_stylebox = value
+		upper_segment = value
+		if is_inside_tree():
+			for child in get_children():
+				_apply_stylebox(child)
+
+@export var lower_segment : StyleBox:
+	set(value):
+		lower_segment = value
 		if is_inside_tree():
 			for child in get_children():
 				_apply_stylebox(child)
@@ -161,8 +170,15 @@ func _apply_text(segment : Panel) -> void:
 
 
 func _apply_stylebox(segment : Panel) -> void:
-	if segment_stylebox:
-		segment.add_theme_stylebox_override("panel", segment_stylebox)
+	if upper_segment and lower_segment:
+		if segment.name == "LowerSegment":
+			segment.add_theme_stylebox_override("panel", lower_segment)
+		else:
+			segment.add_theme_stylebox_override("panel", upper_segment)
+	elif upper_segment and not lower_segment:
+		segment.add_theme_stylebox_override("panel", upper_segment)
+	elif lower_segment and not upper_segment:
+		segment.add_theme_stylebox_override("panel", lower_segment)
 	else:
 		segment.add_theme_stylebox_override("panel", StyleBoxFlat.new())
 
@@ -191,15 +207,20 @@ func _apply_font_settings(segment : Panel) -> void:
 
 
 func flip_to(flap : String):
-	if not flap in flap_sequence:
-		# TODO: warning / error
+	if not flap in flap_sequence and not flap.to_upper() in flap_sequence:
+		push_error("Cannot flip to '%s': There is no flap with that label" % flap)
 		return
 
-	if flap_sequence[current_char_id] == flap:
+	var current_flap := flap_sequence[current_char_id]
+
+	if current_flap == flap or current_flap == flap.to_upper():
 		return
 
-	while flap_sequence[current_char_id] != flap:
+	while current_flap != flap and current_flap != flap.to_upper():
 		await flip_forward()
+		current_flap = flap_sequence[current_char_id]
+
+	finished.emit()
 
 
 func flip_forward():
@@ -221,6 +242,10 @@ func flip_forward():
 		$MovingSegment.pivot_offset.y = -0.5 * segment_separation
 		$MovingSegment/Label.text = flap_sequence[next_char_id]
 		$MovingSegment/Label.position.y = -0.5 * font_height
+		if lower_segment:
+			$MovingSegment.add_theme_stylebox_override("panel", lower_segment)
+
+		var random_color := Color(randf(), randf(), randf())
 	)
 
 	flip_tween.tween_property($MovingSegment, "scale:y", 1.0, 0.5 * flip_time)
@@ -235,5 +260,8 @@ func flip_forward():
 	$MovingSegment.position.y = 0
 	$MovingSegment.pivot_offset.y = 0.5 * (font_height + segment_separation)
 	$MovingSegment/Label.position.y = 0
+	if upper_segment:
+		$MovingSegment.add_theme_stylebox_override("panel", upper_segment)
 
 	current_char_id = wrapi(current_char_id + 1, 0, flap_sequence.size())
+	flipped.emit()

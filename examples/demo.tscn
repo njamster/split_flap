@@ -12,4 +12,4 @@ script = ExtResource("1_to0bd")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
