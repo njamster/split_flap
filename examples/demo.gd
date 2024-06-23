@@ -8,7 +8,7 @@ var flaps_finished := 0
 func _ready() -> void:
 	for letter in test_string.split():
 		var split_flap := SplitFlap.new()
-		split_flap.preset = split_flap.Presets.ALPHABETIC
+		split_flap.preset = split_flap.SequencePresets.ALPHABETIC
 		var random_color := Color(
 			randf_range(0.3, 0.7),
 			randf_range(0.3, 0.7),
@@ -18,14 +18,14 @@ func _ready() -> void:
 		style_box.bg_color = random_color
 		style_box.corner_radius_top_left = 12
 		style_box.corner_radius_top_right = 12
-		split_flap.upper_segment = style_box
+		split_flap.upper_flap = style_box
 		style_box = StyleBoxFlat.new()
 		style_box.bg_color = random_color
 		style_box.corner_radius_bottom_left = 12
 		style_box.corner_radius_bottom_right = 12
-		split_flap.lower_segment = style_box
+		split_flap.lower_flap = style_box
 		split_flap.font_size = 128
-		split_flap.segment_separation = 6
+		split_flap.flap_separation = 6
 		$HBoxContainer.add_child(split_flap)
 
 	await get_tree().create_timer(0.5).timeout

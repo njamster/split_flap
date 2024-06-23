@@ -1,6 +1,6 @@
 # <img src="./icon.png" width="24px"> SplitFlap
 
-A Control node that emulates a [split-flap display](https://en.wikipedia.org/wiki/Split-flap_display). It steps through a predefined sequence of characters until it reaches the target. Each character is split into two halves and when the current character changes, the upper half will drop down.
+A control that emulates a [split-flap display](https://en.wikipedia.org/wiki/Split-flap_display). It steps through a fixed array of characters (predefined by the user) until it reaches the target character. Each character gets vertically split into two halves, and when the current character changes, the upper half will drop down.
 
 # Demo
 
@@ -10,4 +10,4 @@ The demo shown in the GIF above is included in this repo [here](https://github.c
 
 # Documentation
 
-TODO
+Once the plugin has been enabled in the Project Settings, its documentation can be accessed directly from Godot: press ``F1``, then search for "SplitFlap".
